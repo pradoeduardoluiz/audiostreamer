@@ -1,6 +1,6 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui
 
-import androidx.appcompat.app.AppCompatActivity
+import    androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import br.com.pradoeduardoluiz.spotifyclone.R
 
