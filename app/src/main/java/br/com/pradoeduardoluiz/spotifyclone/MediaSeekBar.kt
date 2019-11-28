@@ -10,10 +10,13 @@ import android.widget.SeekBar
 import androidx.appcompat.widget.AppCompatSeekBar
 
 class MediaSeekBar : AppCompatSeekBar {
+
     private var mMediaController: MediaControllerCompat? = null
     private var mControllerCallback: ControllerCallback? = null
+
     var isTracking = false
         private set
+
     private val mOnSeekBarChangeListener: OnSeekBarChangeListener =
         object : OnSeekBarChangeListener {
             override fun onProgressChanged(
