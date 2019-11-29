@@ -13,12 +13,18 @@ class MainActivity : AppCompatActivity(), ProgressBarControl {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        testHomeFragment()
+        //testHomeFragment()
+        testCategoryFragment()
     }
 
     private fun testHomeFragment() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.main_container, HomeFragment.newInstance()).commit()
+    }
+
+    private fun testCategoryFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.main_container, CategoryFragment.newInstance("Music")).commit()
     }
 
     override fun showProgressBar() {

@@ -57,7 +57,7 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
         val reference: DocumentReference =
             firestore.collection(getString(R.string.collection_audio))
-                .document(getString(R.string.document_categories))
+                .document( getString(R.string.document_categories))
 
         reference.get().addOnCompleteListener { task ->
             if (task.isSuccessful) {
