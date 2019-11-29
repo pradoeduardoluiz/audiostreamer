@@ -1,7 +1,9 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui
 
 
+import android.content.ContentValues.TAG
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.adapters.HomeRecyclerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.adapters.HomeSelectorListener
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_home.*
 
 class HomeFragment : Fragment(), HomeSelectorListener {
@@ -34,6 +38,28 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
         adapter = HomeRecyclerAdapter(requireContext(), this)
         recycler_view.adapter = adapter
+
+        retrieveCategories()
+    }
+
+    private fun retrieveCategories() {
+        val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+
+        val reference: DocumentReference =
+            firestore.collection(getString(R.string.collection_audio))
+                .document(getString(R.string.document_categories))
+
+        reference.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val document = task.result
+                Log.d(TAG, "onComplete: $document")
+
+                val categoriesMap: HashMap<String, String> =
+                    document?.data?.get("categories") as HashMap<String, String>
+
+                categories.addAll(categoriesMap.keys)
+            }
+        }
     }
 
     override fun onCategorySelected(position: Int) {
