@@ -2,6 +2,7 @@ package br.com.pradoeduardoluiz.spotifyclone.ui
 
 
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.adapters.HomeRecyclerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.adapters.HomeSelectorListener
+import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.ProgressBarControl
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -20,6 +22,7 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
     private lateinit var adapter: HomeRecyclerAdapter
     private var categories = mutableListOf<String>()
+    private lateinit var progressBar: ProgressBarControl
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,7 +45,14 @@ class HomeFragment : Fragment(), HomeSelectorListener {
         retrieveCategories()
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        progressBar = requireActivity() as ProgressBarControl
+    }
+
     private fun retrieveCategories() {
+        progressBar.showProgressBar()
+
         val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
         val reference: DocumentReference =
@@ -59,11 +69,20 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
                 categories.addAll(categoriesMap.keys)
             }
+            updateDataSet()
         }
+    }
+
+    private fun updateDataSet() {
+        progressBar.hideProgressBar()
+        adapter.setList(categories)
     }
 
     override fun onCategorySelected(position: Int) {
 
     }
 
+    companion object {
+        fun newInstance() = HomeFragment()
+    }
 }

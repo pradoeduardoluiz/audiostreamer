@@ -40,6 +40,7 @@ class HomeRecyclerAdapter(
 
     fun setList(list: MutableList<String>) {
         categories.addAll(list)
+        notifyDataSetChanged()
     }
 
     inner class ViewHolder(itemView: View, listener: HomeSelectorListener) :
@@ -57,11 +58,11 @@ class HomeRecyclerAdapter(
             var iconResource: Drawable? = null
 
             when (category) {
-                "Music: " -> {
+                "Music" -> {
                     iconResource =
                         ContextCompat.getDrawable(context, R.drawable.ic_audiotrack_white_24dp)
                 }
-                "Podcast: " -> {
+                "Podcasts" -> {
                     iconResource = ContextCompat.getDrawable(context, R.drawable.ic_mic_white_24dp)
                 }
             }
