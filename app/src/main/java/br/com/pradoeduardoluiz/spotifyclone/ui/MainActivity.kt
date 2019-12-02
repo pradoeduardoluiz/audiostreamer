@@ -3,9 +3,10 @@ package br.com.pradoeduardoluiz.spotifyclone.ui
 import    androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.Fragment
 import br.com.pradoeduardoluiz.spotifyclone.R
-import br.com.pradoeduardoluiz.spotifyclone.model.Artist
 import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.ProgressBarControl
+import br.com.pradoeduardoluiz.spotifyclone.util.MainActivityFragmentManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), ProgressBarControl {
@@ -14,34 +15,48 @@ class MainActivity : AppCompatActivity(), ProgressBarControl {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //testHomeFragment()
-        // testCategoryFragment()
-        testPlaylistFragment()
+        loadFragment(HomeFragment.newInstance(), lateralMovement = true)
     }
 
-    private fun testHomeFragment() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.main_container, HomeFragment.newInstance()).commit()
+    private fun loadFragment(fragment: Fragment, lateralMovement: Boolean) {
+        val transaction = supportFragmentManager.beginTransaction()
+
+        if (lateralMovement) {
+            transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left)
+        }
+
+        val tag: String = when (fragment) {
+            is HomeFragment -> getString(R.string.fragment_home)
+            is CategoryFragment -> getString(R.string.fragment_category)
+            is PlaylistFragment -> getString(R.string.fragment_playlist)
+            else -> ""
+        }
+
+        transaction.replace(R.id.main_container, fragment, tag)
+            .commit()
+
+        MainActivityFragmentManager.getInstance()?.addFragment(fragment)
+
+        showFragment(fragment, false)
     }
 
-    private fun testCategoryFragment() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.main_container, CategoryFragment.newInstance("Music")).commit()
-    }
+    private fun showFragment(fragment: Fragment, backswardsMovement: Boolean) {
+        val transaction = supportFragmentManager.beginTransaction()
 
-    private fun testPlaylistFragment() {
-        supportFragmentManager.beginTransaction()
-            .replace(
-                R.id.main_container,
-                PlaylistFragment.newInstance(
-                    "Podcasts",
-                    Artist(
-                        title = "CodingWithMitch Podcast",
-                        image = "https://assets.blubrry.com/coverart/orig/654497-584077.png",
-                        artistId = "m2BE0t4z0raEqqqgHXj4"
-                    )
-                )
-            ).commit()
+        if (backswardsMovement) {
+            transaction.setCustomAnimations(R.anim.enter_from_left, R.anim.exit_to_right)
+        }
+
+        transaction.show(fragment)
+        transaction.commit()
+
+        MainActivityFragmentManager.getInstance()?.fragments?.forEach {
+            if (it.tag.equals(fragment.tag)) {
+                val fragmentTransaction = supportFragmentManager.beginTransaction()
+                fragmentTransaction.hide(it)
+                fragmentTransaction.commit()
+            }
+        }
     }
 
     override fun showProgressBar() {
