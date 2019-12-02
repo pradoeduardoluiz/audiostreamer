@@ -19,7 +19,7 @@
         android:paddingTop="1dp">
 
         <TextView
-            android:id="@+id/media_song_title"
+            android:id="@+id/text_media_song_title"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="5dp"
@@ -29,7 +29,7 @@
             android:textSize="15sp" />
 
         <ImageView
-            android:id="@+id/play_pause"
+            android:id="@+id/button_play_pause"
             android:layout_width="@dimen/mediaControllerSize"
             android:layout_height="@dimen/mediaControllerSize"
             android:layout_alignParentEnd="true"
