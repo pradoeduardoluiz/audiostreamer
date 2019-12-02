@@ -4,6 +4,7 @@ import    androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import br.com.pradoeduardoluiz.spotifyclone.R
+import br.com.pradoeduardoluiz.spotifyclone.model.Artist
 import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.ProgressBarControl
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -14,7 +15,8 @@ class MainActivity : AppCompatActivity(), ProgressBarControl {
         setContentView(R.layout.activity_main)
 
         //testHomeFragment()
-        testCategoryFragment()
+        // testCategoryFragment()
+        testPlaylistFragment()
     }
 
     private fun testHomeFragment() {
@@ -25,6 +27,21 @@ class MainActivity : AppCompatActivity(), ProgressBarControl {
     private fun testCategoryFragment() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.main_container, CategoryFragment.newInstance("Music")).commit()
+    }
+
+    private fun testPlaylistFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.main_container,
+                PlaylistFragment.newInstance(
+                    "Podcasts",
+                    Artist(
+                        title = "CodingWithMitch Podcast",
+                        image = "https://assets.blubrry.com/coverart/orig/654497-584077.png",
+                        artistId = "m2BE0t4z0raEqqqgHXj4"
+                    )
+                )
+            ).commit()
     }
 
     override fun showProgressBar() {
