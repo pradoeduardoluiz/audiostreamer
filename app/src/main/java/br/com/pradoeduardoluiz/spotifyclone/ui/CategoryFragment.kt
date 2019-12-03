@@ -14,18 +14,17 @@ import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.adapters.CategoryRecyclerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.adapters.CategorySelectorListener
 import br.com.pradoeduardoluiz.spotifyclone.model.Artist
-import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.ProgressBarControl
+import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QueryDocumentSnapshot
 import kotlinx.android.synthetic.main.fragment_home.*
 
 class CategoryFragment : Fragment(), CategorySelectorListener {
 
     private lateinit var adapter: CategoryRecyclerAdapter
-    private var artist = mutableListOf<Artist>()
+    private var artists = mutableListOf<Artist>()
     private var selectedCategory = ""
-    private lateinit var progressBar: ProgressBarControl
+    private lateinit var mainActivityListener: MainActivityListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +46,7 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        progressBar = requireActivity() as ProgressBarControl
+        mainActivityListener = requireActivity() as MainActivityListener
     }
 
     private fun initRecyclerView() {
@@ -61,6 +60,10 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
     }
 
     private fun retrieveArtists() {
+        mainActivityListener.showProgressBar()
+
+        artists.clear()
+
         val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
         val query: Query = firestore
@@ -71,7 +74,7 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
         query.get().addOnCompleteListener {
             if (it.isSuccessful) {
                 it.result?.forEach { document ->
-                    artist.add(document.toObject(Artist::class.java))
+                    artists.add(document.toObject(Artist::class.java))
                 }
             } else {
                 Log.d(TAG, "onComplete: error getting documents: " + it.exception)
@@ -81,12 +84,12 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
     }
 
     private fun updateDataSet() {
-        progressBar.hideProgressBar()
-        adapter.setList(artist)
+        mainActivityListener.hideProgressBar()
+        adapter.setList(artists)
     }
 
     override fun onArtistSelected(position: Int) {
-
+        mainActivityListener.onArtistSelected(selectedCategory, artists[position])
     }
 
     companion object {

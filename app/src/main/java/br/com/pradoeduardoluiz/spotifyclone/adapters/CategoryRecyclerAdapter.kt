@@ -38,6 +38,7 @@ class CategoryRecyclerAdapter(
     }
 
     fun setList(list: MutableList<Artist>) {
+        artist.clear()
         artist.addAll(list)
         notifyDataSetChanged()
     }

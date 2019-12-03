@@ -39,6 +39,7 @@ class HomeRecyclerAdapter(
     }
 
     fun setList(list: MutableList<String>) {
+        categories.clear()
         categories.addAll(list)
         notifyDataSetChanged()
     }

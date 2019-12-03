@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.adapters.HomeRecyclerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.adapters.HomeSelectorListener
-import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.ProgressBarControl
+import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -22,7 +22,7 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
     private lateinit var adapter: HomeRecyclerAdapter
     private var categories = mutableListOf<String>()
-    private lateinit var progressBar: ProgressBarControl
+    private lateinit var mainActivityListener: MainActivityListener
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,17 +47,19 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        progressBar = requireActivity() as ProgressBarControl
+        mainActivityListener = requireActivity() as MainActivityListener
     }
 
     private fun retrieveCategories() {
-        progressBar.showProgressBar()
+        categories.clear()
+
+        mainActivityListener.showProgressBar()
 
         val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
         val reference: DocumentReference =
             firestore.collection(getString(R.string.collection_audio))
-                .document( getString(R.string.document_categories))
+                .document(getString(R.string.document_categories))
 
         reference.get().addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -74,12 +76,13 @@ class HomeFragment : Fragment(), HomeSelectorListener {
     }
 
     private fun updateDataSet() {
-        progressBar.hideProgressBar()
+        mainActivityListener.hideProgressBar()
         adapter.setList(categories)
     }
 
     override fun onCategorySelected(position: Int) {
-
+        Log.d(TAG, "onCategorySelected: list item is clicked!")
+        mainActivityListener.onCategorySelected(categories[position])
     }
 
     companion object {

@@ -15,16 +15,17 @@ import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.adapters.MediaSelectorListener
 import br.com.pradoeduardoluiz.spotifyclone.adapters.PlaylistRecyclerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.model.Artist
-import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.ProgressBarControl
+import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import kotlinx.android.synthetic.main.fragment_home.*
 
+
 class PlaylistFragment : Fragment(), MediaSelectorListener {
 
     private lateinit var adapter: PlaylistRecyclerAdapter
-    private lateinit var progressBar: ProgressBarControl
+    private lateinit var mainActivityListener: MainActivityListener
     private var mediaList = mutableListOf<MediaMetadataCompat>()
     private var selectedCategory: String = " "
     private var selectedArtist: Artist? = null
@@ -51,7 +52,7 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        progressBar = requireActivity() as ProgressBarControl
+        mainActivityListener = requireActivity() as MainActivityListener
     }
 
     private fun initRecyclerView() {
@@ -65,21 +66,29 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
     }
 
     private fun retrieveMedia() {
-        progressBar.showProgressBar()
+        mediaList.clear()
+
+        mainActivityListener.showProgressBar()
 
         val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
         selectedArtist?.let { selectedArtist ->
-
-            val query: Query = firestore
+            val query = firestore
                 .collection(getString(R.string.collection_audio))
                 .document(getString(R.string.document_categories))
-                .collection(selectedCategory).document(selectedArtist.artistId)
+                .collection(selectedCategory)
+                .document(selectedArtist.artist_id)
                 .collection(getString(R.string.collection_content))
-                .orderBy(getString(R.string.field_date_added), Query.Direction.ASCENDING)
+                .orderBy(
+                    getString(R.string.field_date_added),
+                    Query.Direction.ASCENDING
+                )
 
             query.get().addOnCompleteListener {
                 if (it.isSuccessful) {
+
+                    print(it.result?.size())
+
                     it.result?.forEach { document ->
                         addToMediaList(document)
                     }
@@ -129,7 +138,7 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
 
 
     private fun updateDataSet() {
-        progressBar.hideProgressBar()
+        mainActivityListener.hideProgressBar()
         adapter.setList(mediaList)
     }
 

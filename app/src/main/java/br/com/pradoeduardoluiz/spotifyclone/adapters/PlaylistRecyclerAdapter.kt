@@ -37,6 +37,7 @@ class PlaylistRecyclerAdapter(
     }
 
     fun setList(list: MutableList<MediaMetadataCompat>) {
+        mediaList.clear()
         mediaList.addAll(list)
         notifyDataSetChanged()
     }

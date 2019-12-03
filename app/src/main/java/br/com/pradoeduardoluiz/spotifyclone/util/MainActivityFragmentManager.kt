@@ -25,7 +25,7 @@ data class MainActivityFragmentManager(
     companion object {
         private var instance: MainActivityFragmentManager? = null
         fun getInstance(): MainActivityFragmentManager? {
-            if (instance != null) {
+            if (instance == null) {
                 instance = MainActivityFragmentManager()
             }
             return instance
