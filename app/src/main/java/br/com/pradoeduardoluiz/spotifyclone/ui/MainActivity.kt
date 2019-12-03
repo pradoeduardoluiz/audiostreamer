@@ -100,4 +100,8 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
     override fun onArtistSelected(category: String, artist: Artist) {
         loadFragment(PlaylistFragment.newInstance(category, artist), true)
     }
+
+    override fun setActionBarTitle(title: String) {
+        supportActionBar?.title = title
+    }
 }

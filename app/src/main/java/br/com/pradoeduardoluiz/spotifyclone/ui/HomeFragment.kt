@@ -32,6 +32,7 @@ class HomeFragment : Fragment(), HomeSelectorListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        mainActivityListener.setActionBarTitle(getString(R.string.categories))
         initRecyclerView()
     }
 
@@ -44,6 +45,7 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
         retrieveCategories()
     }
+
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -83,6 +85,12 @@ class HomeFragment : Fragment(), HomeSelectorListener {
     override fun onCategorySelected(position: Int) {
         Log.d(TAG, "onCategorySelected: list item is clicked!")
         mainActivityListener.onCategorySelected(categories[position])
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        if (!hidden) {
+            mainActivityListener.setActionBarTitle(getString(R.string.categories))
+        }
     }
 
     companion object {

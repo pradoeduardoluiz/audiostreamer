@@ -47,6 +47,8 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        mainActivityListener.setActionBarTitle(selectedArtist?.title ?: "")
+
         initRecyclerView()
     }
 
@@ -145,6 +147,12 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
 
     override fun onMediaSelected(position: Int) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        if (!hidden) {
+            mainActivityListener.setActionBarTitle(selectedArtist?.title ?: "")
+        }
     }
 
     companion object {

@@ -41,6 +41,8 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        mainActivityListener.setActionBarTitle(selectedCategory)
+
         initRecyclerView()
     }
 
@@ -90,6 +92,12 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
 
     override fun onArtistSelected(position: Int) {
         mainActivityListener.onArtistSelected(selectedCategory, artists[position])
+    }
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        if (!hidden) {
+            mainActivityListener.setActionBarTitle(selectedCategory)
+        }
     }
 
     companion object {
