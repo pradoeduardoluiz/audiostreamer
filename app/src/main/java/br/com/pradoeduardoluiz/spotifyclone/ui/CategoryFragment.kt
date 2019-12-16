@@ -31,6 +31,7 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
         arguments?.let {
             selectedCategory = it.getString(ARGUMENT_SELECTED_CATEGORY, "")
         }
+        retainInstance = true
     }
 
     override fun onCreateView(
@@ -58,7 +59,11 @@ class CategoryFragment : Fragment(), CategorySelectorListener {
         adapter = CategoryRecyclerAdapter(requireContext(), this)
         recycler_view.adapter = adapter
 
-        retrieveArtists()
+        if (artists.size == 0) {
+            retrieveArtists()
+        }else{
+            updateDataSet()
+        }
     }
 
     private fun retrieveArtists() {

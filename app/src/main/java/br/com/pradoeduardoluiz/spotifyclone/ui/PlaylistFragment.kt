@@ -33,6 +33,7 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        retainInstance = true
         arguments?.let {
             selectedCategory = it.getString(ARGUMENT_SELECTED_CATEGORY, "")
             selectedArtist = it.getParcelable(ARGUMENT_SELECTED_ARTIST)
@@ -64,7 +65,11 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         adapter = PlaylistRecyclerAdapter(requireContext(), this)
         recycler_view.adapter = adapter
 
-        retrieveMedia()
+        if (mediaList.size == 0) {
+            retrieveMedia()
+        }else{
+            updateDataSet()
+        }
     }
 
     private fun retrieveMedia() {

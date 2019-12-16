@@ -16,7 +16,19 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        loadFragment(HomeFragment.newInstance(), lateralMovement = true)
+        if (savedInstanceState == null) {
+            loadFragment(HomeFragment.newInstance(), lateralMovement = true)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        MainActivityFragmentManager.getInstance()?.fragments?.size?.let {
+            outState.putInt(
+                "active_fragments",
+                it
+            )
+        }
     }
 
     private fun loadFragment(fragment: Fragment, lateralMovement: Boolean) {

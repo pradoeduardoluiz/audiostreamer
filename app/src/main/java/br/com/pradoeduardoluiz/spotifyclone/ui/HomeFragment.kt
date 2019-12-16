@@ -24,6 +24,11 @@ class HomeFragment : Fragment(), HomeSelectorListener {
     private var categories = mutableListOf<String>()
     private lateinit var mainActivityListener: MainActivityListener
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        retainInstance = true
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -43,7 +48,11 @@ class HomeFragment : Fragment(), HomeSelectorListener {
         adapter = HomeRecyclerAdapter(requireContext(), this)
         recycler_view.adapter = adapter
 
-        retrieveCategories()
+        if (categories.size == 0) {
+            retrieveCategories()
+        }else{
+            updateDataSet()
+        }
     }
 
 
