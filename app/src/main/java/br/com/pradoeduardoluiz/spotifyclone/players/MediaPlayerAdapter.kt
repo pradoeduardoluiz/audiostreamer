@@ -3,12 +3,13 @@ package br.com.pradoeduardoluiz.spotifyclone.players
 import android.content.Context
 import android.net.Uri
 import android.support.v4.media.MediaMetadataCompat
-import com.google.android.exoplayer2.DefaultLoadControl
-import com.google.android.exoplayer2.DefaultRenderersFactory
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.SimpleExoPlayer
+import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.trackselection.TrackSelector
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -19,6 +20,8 @@ class MediaPlayerAdapter(context: Context) : PlayerAdapter(context) {
     private val context: Context = context
     private var currentMedia: MediaMetadataCompat? = null
     private var currentMediaPlayerCompletion: Boolean = false
+    private var state: Int = -1
+    private var startTime: Long = -1
 
     //ExoPlayer objects
     private var exoPlayer: SimpleExoPlayer? = null
@@ -50,11 +53,21 @@ class MediaPlayerAdapter(context: Context) : PlayerAdapter(context) {
 
 
     override fun onPlay() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        exoPlayer?.let {
+            if (!it.playWhenReady) {
+                it.playWhenReady = true
+                setNewState(PlaybackStateCompat.STATE_PLAYING)
+            }
+        }
     }
 
     override fun onPause() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        exoPlayer?.let {
+            if (!it.playWhenReady) {
+                it.playWhenReady = false
+                setNewState(PlaybackStateCompat.STATE_PAUSED)
+            }
+        }
     }
 
     override fun playFromMedia(metadata: MediaMetadataCompat?) {
@@ -62,24 +75,25 @@ class MediaPlayerAdapter(context: Context) : PlayerAdapter(context) {
         playFile(metadata)
     }
 
-
-    override fun getCurrentMedia(): MediaMetadataCompat? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun getCurrentMedia(): MediaMetadataCompat? = currentMedia
 
     override val isPlaying: Boolean
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = exoPlayer?.playWhenReady ?: false
 
     override fun onStop() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        setNewState(PlaybackStateCompat.STATE_STOPPED)
+        release()
     }
 
     override fun seekTo(position: Long) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        exoPlayer?.let {
+            it.seekTo(position)
+            setNewState(state)
+        }
     }
 
     override fun setVolume(volume: Float) {
-        TODO("not implemented") //To change body of create   d functions use File | Settings | File Templates.
+        exoPlayer?.volume = volume
     }
 
     private fun playFile(metadata: MediaMetadataCompat?) {
@@ -122,5 +136,105 @@ class MediaPlayerAdapter(context: Context) : PlayerAdapter(context) {
 
     private fun startTrackingPlayback() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    private fun setNewState(newPlayerState: Int) {
+        state = newPlayerState
+
+        if (state == PlaybackStateCompat.STATE_STOPPED) {
+            currentMediaPlayerCompletion = true
+        }
+
+        val reportPosition: Long = if (exoPlayer == null) 0 else exoPlayer?.currentPosition ?: 0
+    }
+
+    /**
+     * Set the current capabilities available on this session. Note: If a capability is not
+     * listed in the bitmask of capabilities then the MediaSession will not handle it. For
+     * example, if you don't want ACTION_STOP to be handled by the MediaSession, then don't
+     * included it in the bitmask that's returned.
+     */
+    @PlaybackStateCompat.Actions
+    private fun getAvailableActions(): Long {
+        var actions = (PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
+                or PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH
+                or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+        when (state) {
+            PlaybackStateCompat.STATE_STOPPED -> {
+                actions =
+                    actions or PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_PAUSE
+            }
+            PlaybackStateCompat.STATE_PLAYING -> {
+                actions =
+                    actions or (PlaybackStateCompat.ACTION_STOP
+                            or PlaybackStateCompat.ACTION_PAUSE
+                            or PlaybackStateCompat.ACTION_SEEK_TO)
+            }
+            PlaybackStateCompat.STATE_PAUSED -> {
+                actions =
+                    actions or PlaybackStateCompat.ACTION_PLAY or PlaybackStateCompat.ACTION_STOP
+            }
+            else -> actions = actions or (PlaybackStateCompat.ACTION_PLAY
+                    or PlaybackStateCompat.ACTION_PLAY_PAUSE
+                    or PlaybackStateCompat.ACTION_STOP
+                    or PlaybackStateCompat.ACTION_PAUSE)
+        }
+        return actions
+    }
+
+    private inner class ExoPlayerEventListener : Player.EventListener {
+        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onSeekProcessed() {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onTracksChanged(
+            trackGroups: TrackGroupArray?,
+            trackSelections: TrackSelectionArray?
+        ) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onPlayerError(error: ExoPlaybackException?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onLoadingChanged(isLoading: Boolean) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onPositionDiscontinuity(reason: Int) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onShuffleModeEnabledChanged(shuxzffleModeEnabled: Boolean) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+            when (playbackState) {
+                Player.STATE_ENDED -> setNewState(PlaybackStateCompat.STATE_PAUSED)
+                Player.STATE_BUFFERING -> startTime = System.currentTimeMillis()
+                Player.STATE_READY -> {
+                    Log.d(
+                        TAG,
+                        "[onPlayerStateChanged]: TIME ELAPSED: " + (System.currentTimeMillis() - startTime)
+                    )
+                }
+            }
+        }
+
     }
 }
