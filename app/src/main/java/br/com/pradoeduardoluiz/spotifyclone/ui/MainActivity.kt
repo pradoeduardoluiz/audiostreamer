@@ -1,20 +1,26 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui
 
-import    androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import br.com.pradoeduardoluiz.spotifyclone.R
+import br.com.pradoeduardoluiz.spotifyclone.client.MediaBrowserHelper
 import br.com.pradoeduardoluiz.spotifyclone.model.Artist
+import br.com.pradoeduardoluiz.spotifyclone.services.MediaService
 import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
 import br.com.pradoeduardoluiz.spotifyclone.util.MainActivityFragmentManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), MainActivityListener {
 
+    private lateinit var mediaBrowserHelper: MediaBrowserHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        mediaBrowserHelper = MediaBrowserHelper(this, MediaService::class.java)
 
         if (savedInstanceState == null) {
             loadFragment(HomeFragment.newInstance(), lateralMovement = true)
@@ -29,6 +35,16 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
                 it
             )
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mediaBrowserHelper.onStart()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mediaBrowserHelper.onStop()
     }
 
     private fun loadFragment(fragment: Fragment, lateralMovement: Boolean) {
