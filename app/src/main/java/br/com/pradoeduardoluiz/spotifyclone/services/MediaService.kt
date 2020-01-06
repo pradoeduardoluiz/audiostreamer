@@ -4,25 +4,36 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.text.TextUtils
+import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
+import br.com.pradoeduardoluiz.spotifyclone.players.MediaPlayerAdapter
+import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
 
 class MediaService : MediaBrowserServiceCompat() {
 
-    private var session: MediaSessionCompat
+    private lateinit var session: MediaSessionCompat
+    private lateinit var playback: PlayerAdapter
 
-    init {
+    override fun onCreate() {
+        super.onCreate()
+
+        //Build the MediaSession
+
         session = MediaSessionCompat(this, TAG)
         session.setFlags(MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS)
-
         session.setCallback(MediaSessionCallback())
-
         sessionToken = session.sessionToken
+
+        playback = MediaPlayerAdapter(this)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.d(TAG, "[onTaskRemoved]: ")
         super.onTaskRemoved(rootIntent)
+        playback.stop()
         stopSelf()
     }
 
@@ -57,44 +68,87 @@ class MediaService : MediaBrowserServiceCompat() {
     }
 
 
+    // Send Message from MediaPlayerAdapter to MediaService
     inner class MediaSessionCallback : MediaSessionCompat.Callback() {
 
+        private var playList: MutableList<MediaSessionCompat.QueueItem> = arrayListOf()
+        private var queueIndex: Int = -1
+        private var preparedMedia: MediaMetadataCompat? = null
+
         override fun onPrepare() {
-            super.onPrepare()
+            if (queueIndex < 0 && playList.isEmpty()) {
+                return
+            }
+
+            preparedMedia = null // TODO: Need to retreieve the selected media here
+
+            if (!session.isActive) {
+                session.isActive = true
+            }
         }
 
         override fun onPlay() {
-            super.onPlay()
+            if (!isReadyToPlay()) {
+                return
+            }
+
+            if (preparedMedia == null) {
+                onPrepare()
+            }
+
+            playback.playFromMedia(preparedMedia)
         }
 
         override fun onStop() {
-            super.onStop()
+            playback.stop()
+            session.isActive = false
+        }
+
+        override fun onPause() {
+            playback.pause()
         }
 
         override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
-
+            Log.d(TAG, "[onPlayFromMediaId]: Called")
         }
 
         override fun onSeekTo(pos: Long) {
-            super.onSeekTo(pos)
+            playback.seekTo(pos)
         }
 
         override fun onSkipToNext() {
-            super.onSkipToNext()
+            Log.d(TAG, "[onSkipToNext]: SKIP TO NEXT")
+            queueIndex = (++queueIndex % playList.size)
+            Log.d(TAG, "[onSkipToNext]: queue Index $queueIndex")
+            onPlay()
         }
 
         override fun onSkipToPrevious() {
-            super.onSkipToPrevious()
+            Log.d(TAG, "[onSkipToPrevious]: SKIP TO PREVIOUS")
+            queueIndex = if (queueIndex < 0) queueIndex - 1 else playList.size - 1
+            onPlay()
         }
 
         override fun onAddQueueItem(description: MediaDescriptionCompat?) {
-            super.onAddQueueItem(description)
+            Log.d(TAG, "[onAddQueueItem]: called: position in list ${playList.size}")
+            playList.add(MediaSessionCompat.QueueItem(description, description.hashCode().toLong()))
+            queueIndex = if (queueIndex == -1) 0 else queueIndex
+            session.setQueue(playList)
         }
 
         override fun onRemoveQueueItem(description: MediaDescriptionCompat?) {
-            super.onRemoveQueueItem(description)
+            Log.d(TAG, "[onRemoveQueueItem]: ")
+            playList.remove(
+                MediaSessionCompat.QueueItem(
+                    description,
+                    description.hashCode().toLong()
+                )
+            )
+            queueIndex = if (playList.isEmpty()) -1 else queueIndex
+            session.setQueue(playList)
         }
 
+        private fun isReadyToPlay() = (playList.isNotEmpty())
     }
 
     companion object {
