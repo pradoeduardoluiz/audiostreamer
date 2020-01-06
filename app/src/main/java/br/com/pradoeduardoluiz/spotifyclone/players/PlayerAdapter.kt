@@ -56,7 +56,7 @@ abstract class PlayerAdapter(context: Context) {
 
     abstract fun playFromMedia(metadata: MediaMetadataCompat?)
 
-    abstract val currentMedia: MediaMetadataCompat?
+    abstract fun getCurrentMedia(): MediaMetadataCompat?
 
     abstract val isPlaying: Boolean
 
