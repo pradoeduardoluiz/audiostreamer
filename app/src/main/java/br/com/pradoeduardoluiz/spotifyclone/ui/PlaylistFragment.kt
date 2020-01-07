@@ -165,6 +165,12 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         }
     }
 
+    private fun saveLastPlaySongProperties() {
+        selectedArtist?.artist_id?.let {
+            mainActivityListener.getMyPreferenceManager().setPlayListId(it)
+        }
+    }
+
     companion object {
         private const val ARGUMENT_SELECTED_CATEGORY = "ARGUMENT_SELECTED_CATEGORY"
         private const val ARGUMENT_SELECTED_ARTIST = "ARGUMENT_SELECTED_ARTIST"

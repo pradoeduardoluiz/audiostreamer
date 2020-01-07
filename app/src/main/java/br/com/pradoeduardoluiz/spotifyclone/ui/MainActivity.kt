@@ -15,6 +15,7 @@ import br.com.pradoeduardoluiz.spotifyclone.services.MediaService
 import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
 import br.com.pradoeduardoluiz.spotifyclone.util.Constants
 import br.com.pradoeduardoluiz.spotifyclone.util.MainActivityFragmentManager
+import br.com.pradoeduardoluiz.spotifyclone.util.MyPreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), MainActivityListener {
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
     private lateinit var mediaBrowserHelper: MediaBrowserHelper
     private var isPlaying: Boolean = false
     private var application: MyApplication? = null
+    private lateinit var preferenceManager: MyPreferenceManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +35,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
 
         mediaBrowserHelper = MediaBrowserHelper(this, MediaService::class.java)
         application = MyApplication.getInstance()
+        preferenceManager = MyPreferenceManager(this)
 
         if (savedInstanceState == null) {
             loadFragment(HomeFragment.newInstance(), lateralMovement = true)
@@ -158,18 +161,34 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
         return application
     }
 
-    override fun onMediaSelected(playlistId: String, mediaItem: MediaMetadataCompat?, queuePosition:Int) {
+    override fun onMediaSelected(
+        playlistId: String,
+        mediaItem: MediaMetadataCompat?,
+        queuePosition: Int
+    ) {
         if (mediaItem != null) {
             Log.d(TAG, "[onMediaSelected]: Called ${mediaItem.description.mediaId}")
 
-            val bundle: Bundle = Bundle()
-            bundle.putInt(Constants.MEDIA_QUEUE_POSITION, queuePosition )
+            val currentPlaylistId = getMyPreferenceManager().getPlayListId()
 
-            mediaBrowserHelper.subscribeToNewPlayList(playlistId)
-            mediaBrowserHelper.getTransportControls()
-                ?.playFromMediaId(mediaItem.description.mediaId, null)
+            val bundle = Bundle()
+            bundle.putInt(Constants.MEDIA_QUEUE_POSITION, queuePosition)
+
+            if (playlistId == currentPlaylistId) {
+                mediaBrowserHelper.getTransportControls()
+                    ?.playFromMediaId(mediaItem.description.mediaId, bundle)
+            } else {
+                bundle.putBoolean(Constants.QUEUE_NEW_PLAYLIST, true)
+                mediaBrowserHelper.subscribeToNewPlayList(playlistId)
+                mediaBrowserHelper.getTransportControls()
+                    ?.playFromMediaId(mediaItem.description.mediaId, bundle)
+            }
         } else {
-            Toast.makeText(this, "Selecte something to play", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Select something to play", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun getMyPreferenceManager(): MyPreferenceManager {
+        return preferenceManager
     }
 }

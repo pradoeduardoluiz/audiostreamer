@@ -73,7 +73,6 @@ class MediaService : MediaBrowserServiceCompat() {
         return BrowserRoot("empty_media", null)
     }
 
-
     // Send Message from MediaPlayerAdapter to MediaService
     inner class MediaSessionCallback : MediaSessionCompat.Callback() {
 
@@ -124,9 +123,15 @@ class MediaService : MediaBrowserServiceCompat() {
             Log.d(TAG, "[onPlayFromMediaId]: Called")
 
             var newQueuePosition: Int = -1
+            var isNewPlayList: Boolean = false
 
             extras?.let {
                 newQueuePosition = it.getInt(Constants.MEDIA_QUEUE_POSITION)
+                isNewPlayList = it.getBoolean(Constants.QUEUE_NEW_PLAYLIST)
+            }
+
+            if (isNewPlayList) {
+                resetPlaylist()
             }
 
             if (newQueuePosition == 1) {
@@ -153,12 +158,14 @@ class MediaService : MediaBrowserServiceCompat() {
             Log.d(TAG, "[onSkipToNext]: SKIP TO NEXT")
             queueIndex = (++queueIndex % playList.size)
             Log.d(TAG, "[onSkipToNext]: queue Index $queueIndex")
+            preparedMedia = null
             onPlay()
         }
 
         override fun onSkipToPrevious() {
             Log.d(TAG, "[onSkipToPrevious]: SKIP TO PREVIOUS")
             queueIndex = if (queueIndex < 0) queueIndex - 1 else playList.size - 1
+            preparedMedia = null
             onPlay()
         }
 
@@ -182,6 +189,11 @@ class MediaService : MediaBrowserServiceCompat() {
         }
 
         private fun isReadyToPlay() = (playList.isNotEmpty())
+
+        private fun resetPlaylist() {
+            playList.clear()
+            queueIndex = -1
+        }
     }
 
     companion object {
