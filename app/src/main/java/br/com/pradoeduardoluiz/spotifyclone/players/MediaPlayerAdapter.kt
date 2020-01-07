@@ -2,6 +2,7 @@ package br.com.pradoeduardoluiz.spotifyclone.players
 
 import android.content.Context
 import android.net.Uri
+import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
@@ -15,13 +16,16 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
-class MediaPlayerAdapter(context: Context) : PlayerAdapter(context) {
+class MediaPlayerAdapter(context: Context, playbackInfoListener: PlaybackInfoListener) :
+    PlayerAdapter(context) {
 
-    private val context: Context = context
+    private val context: Context = context.applicationContext
     private var currentMedia: MediaMetadataCompat? = null
     private var currentMediaPlayerCompletion: Boolean = false
+    @PlaybackStateCompat.State
     private var state: Int = -1
     private var startTime: Long = -1
+    private var playbackInfoListener: PlaybackInfoListener = playbackInfoListener
 
     //ExoPlayer objects
     private var exoPlayer: SimpleExoPlayer? = null
@@ -147,6 +151,15 @@ class MediaPlayerAdapter(context: Context) : PlayerAdapter(context) {
 
         val reportPosition: Long = if (exoPlayer == null) 0 else exoPlayer?.currentPosition ?: 0
     }
+
+
+    private fun publishStateBuilder(reportPosition: Long) {
+        val stateBuilder = PlaybackStateCompat.Builder()
+        stateBuilder.setActions(getAvailableActions())
+        stateBuilder.setState(state, reportPosition, 1.0F, SystemClock.elapsedRealtime())
+        playbackInfoListener.onPlaybackStateChange(stateBuilder.build())
+    }
+
 
     /**
      * Set the current capabilities available on this session. Note: If a capability is not

@@ -6,11 +6,13 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.text.TextUtils
 import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
 import br.com.pradoeduardoluiz.spotifyclone.MyApplication
 import br.com.pradoeduardoluiz.spotifyclone.players.MediaPlayerAdapter
+import br.com.pradoeduardoluiz.spotifyclone.players.PlaybackInfoListener
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.util.Constants
 
@@ -32,7 +34,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
         application = MyApplication.getInstance()
 
-        playback = MediaPlayerAdapter(this)
+        playback = MediaPlayerAdapter(this, MediaPlayerListener())
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -198,5 +200,12 @@ class MediaService : MediaBrowserServiceCompat() {
 
     companion object {
         private const val TAG = "MediaService"
+    }
+
+    private inner class MediaPlayerListener : PlaybackInfoListener {
+
+        override fun onPlaybackStateChange(state: PlaybackStateCompat) {
+            session.setPlaybackState(state)
+        }
     }
 }

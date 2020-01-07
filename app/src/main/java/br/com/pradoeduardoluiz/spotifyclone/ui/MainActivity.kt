@@ -2,6 +2,7 @@ package br.com.pradoeduardoluiz.spotifyclone.ui
 
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -10,6 +11,7 @@ import androidx.fragment.app.Fragment
 import br.com.pradoeduardoluiz.spotifyclone.MyApplication
 import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.client.MediaBrowserHelper
+import br.com.pradoeduardoluiz.spotifyclone.client.MediaBrowserHelperCallback
 import br.com.pradoeduardoluiz.spotifyclone.model.Artist
 import br.com.pradoeduardoluiz.spotifyclone.services.MediaService
 import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
@@ -18,7 +20,7 @@ import br.com.pradoeduardoluiz.spotifyclone.util.MainActivityFragmentManager
 import br.com.pradoeduardoluiz.spotifyclone.util.MyPreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity(), MainActivityListener {
+class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelperCallback {
 
     companion object {
         private const val TAG = "MainActivity"
@@ -34,6 +36,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
         setContentView(R.layout.activity_main)
 
         mediaBrowserHelper = MediaBrowserHelper(this, MediaService::class.java)
+        mediaBrowserHelper.setMediaBrowserHelperCallback(this)
         application = MyApplication.getInstance()
         preferenceManager = MyPreferenceManager(this)
 
@@ -190,5 +193,14 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
 
     override fun getMyPreferenceManager(): MyPreferenceManager {
         return preferenceManager
+    }
+
+    override fun onMetaDataChanged(metadata: MediaMetadataCompat) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+        isPlaying =
+            state != null && state.state == PlaybackStateCompat.STATE_PLAYING
     }
 }

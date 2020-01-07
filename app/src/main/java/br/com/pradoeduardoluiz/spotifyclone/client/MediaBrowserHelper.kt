@@ -4,28 +4,30 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.RemoteException
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
 import java.lang.IllegalStateException
 
 
-class MediaBrowserHelper {
-
-    private var context: Context
+class MediaBrowserHelper(
+    private var context: Context,
     private var mediaBrowserServiceClass: Class<out MediaBrowserServiceCompat?>
+) {
 
     private var mediaBrowser: MediaBrowserCompat? = null
     private var mediaController: MediaControllerCompat? = null
     private var mediaBrowserConnectionCallback: MediaBrowserConnectionCallback
     private var mediaBrowserSubscriptionCallback: MediaBrowserSubscriptionCallback
+    private var mediaControllerCallback: MediaControllerCallback
+    private var mediaHelperControllerCallback: MediaBrowserHelperCallback? = null
 
-    constructor(context: Context, mediaBrowserServiceClass: Class<out MediaBrowserServiceCompat?>) {
-        this.context = context
-        this.mediaBrowserServiceClass = mediaBrowserServiceClass
-
+    init {
         mediaBrowserConnectionCallback = MediaBrowserConnectionCallback()
         mediaBrowserSubscriptionCallback = MediaBrowserSubscriptionCallback()
+        mediaControllerCallback = MediaControllerCallback()
     }
 
     fun onStart() {
@@ -45,6 +47,7 @@ class MediaBrowserHelper {
 
     fun onStop() {
         mediaController?.let {
+            mediaController?.unregisterCallback(mediaControllerCallback)
             mediaController = null
         }
 
@@ -67,6 +70,9 @@ class MediaBrowserHelper {
                 Log.d(TAG, "[onConnected]: ")
                 try {
                     mediaController = MediaControllerCompat(context, it.sessionToken)
+
+                    mediaController?.registerCallback(mediaControllerCallback)
+
                 } catch (e: RemoteException) {
                     Log.d(TAG, "[onConnected]: connection problem: $e")
                 }
@@ -104,8 +110,29 @@ class MediaBrowserHelper {
         mediaBrowser?.subscribe(playlistId, mediaBrowserSubscriptionCallback)
     }
 
+    fun setMediaBrowserHelperCallback(browserHelperCallback: MediaBrowserHelperCallback) {
+        mediaHelperControllerCallback = browserHelperCallback
+    }
+
+
     companion object {
         private const val TAG = "MediaBrowserHelper"
+    }
+
+    private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
+
+        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+            Log.d(TAG, "[onPlaybackStateChanged]: called")
+            mediaHelperControllerCallback?.let { mediaHelperControllerCallback ->
+                state?.let {
+                    mediaHelperControllerCallback.onPlaybackStateChanged(it)
+                }
+            }
+        }
+
+        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+
+        }
     }
 
 }
