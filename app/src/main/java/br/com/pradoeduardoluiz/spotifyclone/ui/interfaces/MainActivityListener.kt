@@ -1,5 +1,6 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui.interfaces
 
+import br.com.pradoeduardoluiz.spotifyclone.MyApplication
 import br.com.pradoeduardoluiz.spotifyclone.model.Artist
 
 interface MainActivityListener {
@@ -9,5 +10,6 @@ interface MainActivityListener {
     fun onArtistSelected(category: String, artist: Artist)
     fun setActionBarTitle(title: String)
     fun playPause()
+    fun getMyApplication(): MyApplication?
 
 }

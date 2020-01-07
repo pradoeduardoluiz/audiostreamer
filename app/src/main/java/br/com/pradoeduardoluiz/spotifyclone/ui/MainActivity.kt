@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import br.com.pradoeduardoluiz.spotifyclone.MyApplication
 import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.client.MediaBrowserHelper
 import br.com.pradoeduardoluiz.spotifyclone.model.Artist
@@ -16,12 +17,14 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
 
     private lateinit var mediaBrowserHelper: MediaBrowserHelper
     private var isPlaying: Boolean = false
+    private var application: MyApplication? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         mediaBrowserHelper = MediaBrowserHelper(this, MediaService::class.java)
+        application = MyApplication.getInstance()
 
         if (savedInstanceState == null) {
             loadFragment(HomeFragment.newInstance(), lateralMovement = true)
@@ -142,5 +145,9 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
             mediaBrowserHelper.getTransportControls()?.play()
             true
         }
+    }
+
+    override fun getMyApplication(): MyApplication? {
+        return application
     }
 }

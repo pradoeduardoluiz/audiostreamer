@@ -67,7 +67,7 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
 
         if (mediaList.size == 0) {
             retrieveMedia()
-        }else{
+        } else {
             updateDataSet()
         }
     }
@@ -149,9 +149,10 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         adapter.setList(mediaList)
     }
 
-
     override fun onMediaSelected(position: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        mainActivityListener.getMyApplication()?.setMediaItems(mediaList)
+        selectedMedia = mediaList[position]
+        adapter.setSelectedIndex(position)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {

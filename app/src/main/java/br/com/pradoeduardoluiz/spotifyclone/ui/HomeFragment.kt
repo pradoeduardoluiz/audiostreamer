@@ -50,7 +50,7 @@ class HomeFragment : Fragment(), HomeSelectorListener {
 
         if (categories.size == 0) {
             retrieveCategories()
-        }else{
+        } else {
             updateDataSet()
         }
     }
