@@ -100,6 +100,10 @@ class MediaBrowserHelper {
         return mediaController?.transportControls
     }
 
+    fun subscribeToNewPlayList(playlistId: String) {
+        mediaBrowser?.subscribe(playlistId, mediaBrowserSubscriptionCallback)
+    }
+
     companion object {
         private const val TAG = "MediaBrowserHelper"
     }

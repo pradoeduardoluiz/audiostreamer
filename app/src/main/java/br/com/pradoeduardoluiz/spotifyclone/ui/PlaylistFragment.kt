@@ -153,7 +153,10 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         mainActivityListener.getMyApplication()?.setMediaItems(mediaList)
         selectedMedia = mediaList[position]
         adapter.setSelectedIndex(position)
-        mainActivityListener.onMediaSelected(selectedMedia)
+
+        selectedArtist?.artist_id?.let {
+            mainActivityListener.onMediaSelected(it, selectedMedia)
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {

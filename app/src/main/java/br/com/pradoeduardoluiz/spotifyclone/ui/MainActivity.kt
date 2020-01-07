@@ -157,9 +157,12 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
         return application
     }
 
-    override fun onMediaSelected(mediaItem: MediaMetadataCompat?) {
+    override fun onMediaSelected(playlistId: String, mediaItem: MediaMetadataCompat?) {
         if (mediaItem != null) {
             Log.d(TAG, "[onMediaSelected]: Called ${mediaItem.description.mediaId}")
+
+
+            mediaBrowserHelper.subscribeToNewPlayList(playlistId)
             mediaBrowserHelper.getTransportControls()
                 ?.playFromMediaId(mediaItem.description.mediaId, null)
         } else {
