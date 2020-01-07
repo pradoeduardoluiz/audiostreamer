@@ -11,14 +11,18 @@ import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
 import br.com.pradoeduardoluiz.spotifyclone.players.MediaPlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
+import br.com.pradoeduardoluiz.spotifyclone.util.MediaLibrary
 
 class MediaService : MediaBrowserServiceCompat() {
 
     private lateinit var session: MediaSessionCompat
     private lateinit var playback: PlayerAdapter
+    private lateinit var mediaLibrary: MediaLibrary
 
     override fun onCreate() {
         super.onCreate()
+
+        mediaLibrary = MediaLibrary()
 
         //Build the MediaSession
 
@@ -51,7 +55,7 @@ class MediaService : MediaBrowserServiceCompat() {
             return
         }
 
-        result.sendResult(null)
+        result.sendResult(MediaLibrary.getMediaItems()?.toMutableList())
     }
 
     override fun onGetRoot(
@@ -62,6 +66,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
         if (clientPackageName == applicationContext.packageName) {
             // allowed to browser media
+            return BrowserRoot("some_fake_playlist", null)
         }
 
         return BrowserRoot("empty_media", null)
@@ -80,7 +85,8 @@ class MediaService : MediaBrowserServiceCompat() {
                 return
             }
 
-            preparedMedia = null // TODO: Need to retreieve the selected media here
+            val mediaId = playList[queueIndex].description.mediaId
+            preparedMedia = mediaLibrary.getTreeMap()?.get(mediaId)
 
             if (!session.isActive) {
                 session.isActive = true
@@ -89,6 +95,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun onPlay() {
             if (!isReadyToPlay()) {
+                // Nothing to play
                 return
             }
 

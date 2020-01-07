@@ -8,5 +8,6 @@ interface MainActivityListener {
     fun onCategorySelected(category: String)
     fun onArtistSelected(category: String, artist: Artist)
     fun setActionBarTitle(title: String)
+    fun playPause()
 
 }

@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(), MainActivityListener {
 
     private lateinit var mediaBrowserHelper: MediaBrowserHelper
+    private var isPlaying: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -131,5 +132,15 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
 
     override fun setActionBarTitle(title: String) {
         supportActionBar?.title = title
+    }
+
+    override fun playPause() {
+        isPlaying = if (isPlaying) {
+            mediaBrowserHelper.getTransportControls()?.pause()
+            false
+        } else {
+            mediaBrowserHelper.getTransportControls()?.play()
+            true
+        }
     }
 }

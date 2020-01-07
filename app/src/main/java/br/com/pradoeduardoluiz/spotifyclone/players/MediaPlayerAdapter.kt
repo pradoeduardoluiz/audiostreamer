@@ -71,7 +71,7 @@ class MediaPlayerAdapter(context: Context) : PlayerAdapter(context) {
     }
 
     override fun playFromMedia(metadata: MediaMetadataCompat?) {
-        startTrackingPlayback()
+//      startTrackingPlayback()
         playFile(metadata)
     }
 

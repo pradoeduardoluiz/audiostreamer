@@ -7,6 +7,7 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
+import java.lang.IllegalStateException
 
 
 class MediaBrowserHelper {
@@ -85,9 +86,18 @@ class MediaBrowserHelper {
             Log.d(TAG, "[onChildrenLoaded]: called $parentId , $children")
 
             children.forEach { mediaItem ->
+                Log.d(TAG, "onChildrenLoaded: CALLED: queue item: " + mediaItem.mediaId)
                 mediaController?.addQueueItem(mediaItem.description)
             }
         }
+    }
+
+    fun getTransportControls(): MediaControllerCompat.TransportControls? {
+        if (mediaController == null) {
+            throw IllegalStateException("Media controller  is null")
+        }
+
+        return mediaController?.transportControls
     }
 
     companion object {
