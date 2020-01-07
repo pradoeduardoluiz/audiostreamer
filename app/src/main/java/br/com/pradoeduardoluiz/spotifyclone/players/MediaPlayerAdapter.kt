@@ -1,5 +1,6 @@
 package br.com.pradoeduardoluiz.spotifyclone.players
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.SystemClock
@@ -16,7 +17,7 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
-class MediaPlayerAdapter(context: Context, playbackInfoListener: PlaybackInfoListener) :
+class MediaPlayerAdapter(context: Context, playInfoListener: PlaybackInfoListener) :
     PlayerAdapter(context) {
 
     private val context: Context = context.applicationContext
@@ -25,7 +26,7 @@ class MediaPlayerAdapter(context: Context, playbackInfoListener: PlaybackInfoLis
     @PlaybackStateCompat.State
     private var state: Int = -1
     private var startTime: Long = -1
-    private var playbackInfoListener: PlaybackInfoListener = playbackInfoListener
+    private var playbackInfoListener: PlaybackInfoListener = playInfoListener
 
     //ExoPlayer objects
     private var exoPlayer: SimpleExoPlayer? = null
@@ -67,7 +68,7 @@ class MediaPlayerAdapter(context: Context, playbackInfoListener: PlaybackInfoLis
 
     override fun onPause() {
         exoPlayer?.let {
-            if (!it.playWhenReady) {
+            if (it.playWhenReady) {
                 it.playWhenReady = false
                 setNewState(PlaybackStateCompat.STATE_PAUSED)
             }
@@ -150,9 +151,11 @@ class MediaPlayerAdapter(context: Context, playbackInfoListener: PlaybackInfoLis
         }
 
         val reportPosition: Long = if (exoPlayer == null) 0 else exoPlayer?.currentPosition ?: 0
+        publishStateBuilder(reportPosition)
     }
 
 
+    @SuppressLint("WrongConstant")
     private fun publishStateBuilder(reportPosition: Long) {
         val stateBuilder = PlaybackStateCompat.Builder()
         stateBuilder.setActions(getAvailableActions())

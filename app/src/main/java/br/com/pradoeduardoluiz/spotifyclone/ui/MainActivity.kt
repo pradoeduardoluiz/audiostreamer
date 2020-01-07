@@ -153,10 +153,9 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
 
     override fun playPause() {
         if (isPlaying) {
-            mediaBrowserHelper.getTransportControls()?.skipToNext()
+            mediaBrowserHelper.getTransportControls()?.pause()
         } else {
             mediaBrowserHelper.getTransportControls()?.play()
-            isPlaying = true
         }
     }
 
@@ -196,11 +195,17 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     }
 
     override fun onMetaDataChanged(metadata: MediaMetadataCompat) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        getMediaControllerFragment().setMediaTitle(metadata)
     }
 
     override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
         isPlaying =
             state != null && state.state == PlaybackStateCompat.STATE_PLAYING
+
+        getMediaControllerFragment().setIsPlaying(isPlaying)
+    }
+
+    private fun getMediaControllerFragment(): MediaControllerFragment {
+        return supportFragmentManager.findFragmentById(R.id.bottom_media_controller) as MediaControllerFragment
     }
 }

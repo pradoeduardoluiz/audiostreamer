@@ -78,6 +78,7 @@ class MediaBrowserHelper(
                 }
 
                 it.subscribe(it.root, mediaBrowserSubscriptionCallback)
+                Log.d(TAG, "onConnected: CALLED: subscribing to: " + mediaBrowser?.root)
             }
         }
     }
