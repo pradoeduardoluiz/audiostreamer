@@ -9,20 +9,18 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.text.TextUtils
 import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
+import br.com.pradoeduardoluiz.spotifyclone.MyApplication
 import br.com.pradoeduardoluiz.spotifyclone.players.MediaPlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
-import br.com.pradoeduardoluiz.spotifyclone.util.MediaLibrary
 
 class MediaService : MediaBrowserServiceCompat() {
 
     private lateinit var session: MediaSessionCompat
     private lateinit var playback: PlayerAdapter
-    private lateinit var mediaLibrary: MediaLibrary
+    private var application: MyApplication? = null
 
     override fun onCreate() {
         super.onCreate()
-
-        mediaLibrary = MediaLibrary()
 
         //Build the MediaSession
 
@@ -30,6 +28,8 @@ class MediaService : MediaBrowserServiceCompat() {
         session.setFlags(MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS)
         session.setCallback(MediaSessionCallback())
         sessionToken = session.sessionToken
+
+        application = MyApplication.getInstance()
 
         playback = MediaPlayerAdapter(this)
     }
@@ -55,7 +55,7 @@ class MediaService : MediaBrowserServiceCompat() {
             return
         }
 
-        result.sendResult(MediaLibrary.getMediaItems()?.toMutableList())
+        result.sendResult(application?.getMediaItems()) // return all available media
     }
 
     override fun onGetRoot(
@@ -66,7 +66,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
         if (clientPackageName == applicationContext.packageName) {
             // allowed to browser media
-            return BrowserRoot("some_fake_playlist", null)
+            return BrowserRoot("some_real_playlist", null)
         }
 
         return BrowserRoot("empty_media", null)
@@ -86,7 +86,11 @@ class MediaService : MediaBrowserServiceCompat() {
             }
 
             val mediaId = playList[queueIndex].description.mediaId
-            preparedMedia = mediaLibrary.getTreeMap()?.get(mediaId)
+
+            mediaId?.let {
+                preparedMedia = application?.getMediaItem(it)
+                session.setMetadata(preparedMedia)
+            }
 
             if (!session.isActive) {
                 session.isActive = true
@@ -117,6 +121,15 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
             Log.d(TAG, "[onPlayFromMediaId]: Called")
+
+            mediaId?.let {
+                preparedMedia = application?.getMediaItem(it)
+                session.setMetadata(preparedMedia)
+                if (!session.isActive) {
+                    session.isActive = true
+                }
+                playback.playFromMedia(preparedMedia)
+            }
         }
 
         override fun onSeekTo(pos: Long) {

@@ -1,7 +1,9 @@
 package br.com.pradoeduardoluiz.spotifyclone.adapters
 
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.support.v4.media.MediaMetadataCompat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -74,6 +76,8 @@ class PlaylistRecyclerAdapter(
             selectedIndex: Int,
             position: Int
         ) {
+
+            itemView.setOnClickListener(this)
             title.text = mediaItem.description.title
             artist.text = mediaItem.description.subtitle
 
@@ -85,6 +89,7 @@ class PlaylistRecyclerAdapter(
         }
 
         override fun onClick(v: View?) {
+            Log.d(TAG, "[onClick]: ")
             mediaSelectorListener.onMediaSelected(adapterPosition)
         }
 

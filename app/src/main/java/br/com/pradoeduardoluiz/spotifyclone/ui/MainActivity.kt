@@ -1,7 +1,10 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui
 
 import android.os.Bundle
+import android.support.v4.media.MediaMetadataCompat
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import br.com.pradoeduardoluiz.spotifyclone.MyApplication
@@ -14,6 +17,10 @@ import br.com.pradoeduardoluiz.spotifyclone.util.MainActivityFragmentManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), MainActivityListener {
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
 
     private lateinit var mediaBrowserHelper: MediaBrowserHelper
     private var isPlaying: Boolean = false
@@ -138,16 +145,25 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
     }
 
     override fun playPause() {
-        isPlaying = if (isPlaying) {
-            mediaBrowserHelper.getTransportControls()?.pause()
-            false
+        if (isPlaying) {
+            mediaBrowserHelper.getTransportControls()?.skipToNext()
         } else {
             mediaBrowserHelper.getTransportControls()?.play()
-            true
+            isPlaying = true
         }
     }
 
     override fun getMyApplication(): MyApplication? {
         return application
+    }
+
+    override fun onMediaSelected(mediaItem: MediaMetadataCompat?) {
+        if (mediaItem != null) {
+            Log.d(TAG, "[onMediaSelected]: Called ${mediaItem.description.mediaId}")
+            mediaBrowserHelper.getTransportControls()
+                ?.playFromMediaId(mediaItem.description.mediaId, null)
+        } else {
+            Toast.makeText(this, "Selecte something to play", Toast.LENGTH_SHORT).show()
+        }
     }
 }
