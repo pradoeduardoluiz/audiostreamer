@@ -12,5 +12,5 @@ interface MainActivityListener {
     fun setActionBarTitle(title: String)
     fun playPause()
     fun getMyApplication(): MyApplication?
-    fun onMediaSelected(playlistId: String, mediaItem: MediaMetadataCompat?)
+    fun onMediaSelected(playlistId: String, mediaItem: MediaMetadataCompat?, queuePosition: Int)
 }

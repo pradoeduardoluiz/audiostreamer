@@ -155,7 +155,7 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         adapter.setSelectedIndex(position)
 
         selectedArtist?.artist_id?.let {
-            mainActivityListener.onMediaSelected(it, selectedMedia)
+            mainActivityListener.onMediaSelected(it, selectedMedia, position)
         }
     }
 

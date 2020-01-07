@@ -12,6 +12,7 @@ import androidx.media.MediaBrowserServiceCompat
 import br.com.pradoeduardoluiz.spotifyclone.MyApplication
 import br.com.pradoeduardoluiz.spotifyclone.players.MediaPlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
+import br.com.pradoeduardoluiz.spotifyclone.util.Constants
 
 class MediaService : MediaBrowserServiceCompat() {
 
@@ -121,6 +122,18 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
             Log.d(TAG, "[onPlayFromMediaId]: Called")
+
+            var newQueuePosition: Int = -1
+
+            extras?.let {
+                newQueuePosition = it.getInt(Constants.MEDIA_QUEUE_POSITION)
+            }
+
+            if (newQueuePosition == 1) {
+                queueIndex++
+            } else {
+                queueIndex = newQueuePosition
+            }
 
             mediaId?.let {
                 preparedMedia = application?.getMediaItem(it)

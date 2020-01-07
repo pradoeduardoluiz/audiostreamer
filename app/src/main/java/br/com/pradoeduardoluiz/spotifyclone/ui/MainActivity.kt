@@ -13,6 +13,7 @@ import br.com.pradoeduardoluiz.spotifyclone.client.MediaBrowserHelper
 import br.com.pradoeduardoluiz.spotifyclone.model.Artist
 import br.com.pradoeduardoluiz.spotifyclone.services.MediaService
 import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
+import br.com.pradoeduardoluiz.spotifyclone.util.Constants
 import br.com.pradoeduardoluiz.spotifyclone.util.MainActivityFragmentManager
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -157,10 +158,12 @@ class MainActivity : AppCompatActivity(), MainActivityListener {
         return application
     }
 
-    override fun onMediaSelected(playlistId: String, mediaItem: MediaMetadataCompat?) {
+    override fun onMediaSelected(playlistId: String, mediaItem: MediaMetadataCompat?, queuePosition:Int) {
         if (mediaItem != null) {
             Log.d(TAG, "[onMediaSelected]: Called ${mediaItem.description.mediaId}")
 
+            val bundle: Bundle = Bundle()
+            bundle.putInt(Constants.MEDIA_QUEUE_POSITION, queuePosition )
 
             mediaBrowserHelper.subscribeToNewPlayList(playlistId)
             mediaBrowserHelper.getTransportControls()
