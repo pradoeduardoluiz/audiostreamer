@@ -73,6 +73,11 @@ class MediaBrowserHelper(
 
                     mediaController?.registerCallback(mediaControllerCallback)
 
+                    mediaController?.let { mediaController ->
+                        mediaHelperControllerCallback?.onMediaControllerConnected(mediaController)
+                    }
+
+
                 } catch (e: RemoteException) {
                     Log.d(TAG, "[onConnected]: connection problem: $e")
                 }

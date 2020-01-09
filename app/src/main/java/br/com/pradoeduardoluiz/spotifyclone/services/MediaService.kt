@@ -11,6 +11,7 @@ import android.text.TextUtils
 import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
 import br.com.pradoeduardoluiz.spotifyclone.MyApplication
+import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.players.MediaPlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.players.PlaybackInfoListener
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
@@ -206,6 +207,20 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun onPlaybackStateChange(state: PlaybackStateCompat) {
             session.setPlaybackState(state)
+        }
+
+        override fun seekTo(progress: Long, max: Long) {
+            val intent = Intent().apply {
+                action = getString(R.string.broadcast_seekbar_update)
+                putExtra(Constants.SEEK_BAR_PROGRESS, progress)
+                putExtra(Constants.SEEK_BAR_MAX, max)
+            }
+            sendBroadcast(intent)
+        }
+
+        override fun onPlaybackComplete() {
+            Log.d(TAG, "[onPlaybackComplete]: SKIPPING TO NEXT")
+            session.controller.transportControls.skipToNext()
         }
     }
 }

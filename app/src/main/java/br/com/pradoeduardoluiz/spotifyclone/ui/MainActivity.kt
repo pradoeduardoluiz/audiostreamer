@@ -1,7 +1,12 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
@@ -30,6 +35,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     private var isPlaying: Boolean = false
     private var application: MyApplication? = null
     private lateinit var preferenceManager: MyPreferenceManager
+    private var seekBarBroadcastReceiver: SeekBarBroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +61,19 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        initSeekBarBroadcastReceiver()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        seekBarBroadcastReceiver?.let {
+            unregisterReceiver(it)
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         mediaBrowserHelper.onStart()
@@ -62,6 +81,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
 
     override fun onStop() {
         super.onStop()
+        getMediaControllerFragment().getMediaSeekBar().disconnectController()
         mediaBrowserHelper.onStop()
     }
 
@@ -205,7 +225,43 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
         getMediaControllerFragment().setIsPlaying(isPlaying)
     }
 
+    override fun onMediaControllerConnected(mediaController: MediaControllerCompat) {
+        getMediaControllerFragment().getMediaSeekBar().setMediaController(mediaController)
+    }
+
     private fun getMediaControllerFragment(): MediaControllerFragment {
         return supportFragmentManager.findFragmentById(R.id.bottom_media_controller) as MediaControllerFragment
+    }
+
+    private fun initSeekBarBroadcastReceiver() {
+
+        val intentFilter = IntentFilter().apply {
+            addAction(getString(R.string.broadcast_seekbar_update))
+        }
+        seekBarBroadcastReceiver = SeekBarBroadcastReceiver().apply {
+            registerReceiver(this, intentFilter)
+        }
+    }
+
+    private inner class SeekBarBroadcastReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+
+            intent?.let { intent ->
+                val seekProgress = intent.getLongExtra(Constants.SEEK_BAR_PROGRESS, 0)
+                val maxProgress = intent.getLongExtra(Constants.SEEK_BAR_MAX, 0)
+
+                if (!getMediaControllerFragment().getMediaSeekBar().isTracking) {
+                    getMediaControllerFragment().getMediaSeekBar().apply {
+                        progress = seekProgress.toInt()
+                        max = maxProgress.toInt()
+                    }
+                }
+
+//                getMediaControllerFragment().getMediaSeekBar().apply {
+//                    progress = seekProgress.toInt()
+//                    max = maxProgress.toInt()
+//                }
+            }
+        }
     }
 }

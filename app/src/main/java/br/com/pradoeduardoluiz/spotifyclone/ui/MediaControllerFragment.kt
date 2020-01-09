@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import br.com.pradoeduardoluiz.spotifyclone.MediaSeekBar
 
 import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
@@ -50,5 +51,8 @@ class MediaControllerFragment : Fragment() {
         listener = activity as MainActivity
     }
 
+    fun getMediaSeekBar(): MediaSeekBar {
+        return seek_bar_audio
+    }
 
 }

@@ -3,6 +3,7 @@ package br.com.pradoeduardoluiz.spotifyclone.players
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.os.Handler
 import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -76,7 +77,7 @@ class MediaPlayerAdapter(context: Context, playInfoListener: PlaybackInfoListene
     }
 
     override fun playFromMedia(metadata: MediaMetadataCompat?) {
-//      startTrackingPlayback()
+        startTrackingPlayback()
         playFile(metadata)
     }
 
@@ -140,7 +141,32 @@ class MediaPlayerAdapter(context: Context, playInfoListener: PlaybackInfoListene
     }
 
     private fun startTrackingPlayback() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val handle = Handler()
+
+        val runnable = object : Runnable {
+            override fun run() {
+                if (isPlaying) {
+                    // send updates
+
+                    exoPlayer?.let {
+                        playbackInfoListener.seekTo(it.contentPosition, it.duration)
+                    }
+
+                    handle.postDelayed(this, 100)
+                }
+
+                exoPlayer?.let { exoPlayer ->
+
+                    if (exoPlayer.contentPosition >= exoPlayer.duration
+                        && exoPlayer.duration > 0
+                    ) {
+                        playbackInfoListener.onPlaybackComplete()
+                    }
+                }
+            }
+        }
+        handle.postDelayed(runnable, 100)
+
     }
 
     private fun setNewState(newPlayerState: Int) {
