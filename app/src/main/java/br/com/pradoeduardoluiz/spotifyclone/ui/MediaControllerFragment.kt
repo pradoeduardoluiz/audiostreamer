@@ -17,6 +17,10 @@ import kotlinx.android.synthetic.main.fragment_media_controller.*
 
 class MediaControllerFragment : Fragment() {
 
+    //UI
+    private var isPlaying: Boolean = false
+    private var selectedMedia: MediaMetadataCompat? = null
+
     private var listener: MainActivityListener? = null
 
     override fun onCreateView(
@@ -27,12 +31,21 @@ class MediaControllerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        if (savedInstanceState != null) {
+            selectedMedia = savedInstanceState.getParcelable("selected_media")
+            selectedMedia?.let {
+                setMediaTitle(it)
+                setIsPlaying(savedInstanceState.getBoolean("is_playing"))
+            }
+        }
+
         button_play_pause.setOnClickListener {
             listener?.playPause()
         }
     }
 
     fun setMediaTitle(mediaItem: MediaMetadataCompat) {
+        selectedMedia = mediaItem
         text_media_song_title.text = mediaItem.description.title
     }
 
@@ -44,6 +57,7 @@ class MediaControllerFragment : Fragment() {
             Glide.with(requireActivity()).load(R.drawable.ic_play_circle_outline_white_24dp)
                 .into(button_play_pause)
         }
+        this.isPlaying = isPlaying
     }
 
     override fun onAttach(context: Context) {
@@ -53,6 +67,12 @@ class MediaControllerFragment : Fragment() {
 
     fun getMediaSeekBar(): MediaSeekBar {
         return seek_bar_audio
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable("selected_media", selectedMedia)
+        outState.putBoolean("is_playing", isPlaying)
     }
 
 }

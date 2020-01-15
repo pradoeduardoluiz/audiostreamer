@@ -48,6 +48,10 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        savedInstanceState?.let { savedInstanceState ->
+            adapter.setSelectedIndex(savedInstanceState.getInt("selected_index"))
+        }
+
         mainActivityListener.setActionBarTitle(selectedArtist?.title ?: "")
 
         initRecyclerView()
@@ -169,6 +173,11 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         selectedArtist?.artist_id?.let {
             mainActivityListener.getMyPreferenceManager().setPlayListId(it)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("selected_index", adapter.getSelectedIndex())
     }
 
     fun updateUI(mediaItem: MediaMetadataCompat?) {
