@@ -7,5 +7,6 @@ interface PlaybackInfoListener {
     fun onPlaybackStateChange(state: PlaybackStateCompat)
     fun seekTo(progress: Long, max: Long)
     fun onPlaybackComplete()
+    fun updateUI(mediaId: String?)
 
 }

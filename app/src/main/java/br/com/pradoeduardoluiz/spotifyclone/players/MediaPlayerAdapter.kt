@@ -187,6 +187,7 @@ class MediaPlayerAdapter(context: Context, playInfoListener: PlaybackInfoListene
         stateBuilder.setActions(getAvailableActions())
         stateBuilder.setState(state, reportPosition, 1.0F, SystemClock.elapsedRealtime())
         playbackInfoListener.onPlaybackStateChange(stateBuilder.build())
+        playbackInfoListener.updateUI(currentMedia?.description?.mediaId)
     }
 
 

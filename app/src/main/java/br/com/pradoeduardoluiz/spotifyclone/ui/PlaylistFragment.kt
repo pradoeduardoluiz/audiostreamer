@@ -171,6 +171,14 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         }
     }
 
+    fun updateUI(mediaItem: MediaMetadataCompat?) {
+        mediaItem?.let {
+            adapter.setSelectedIndex(adapter.getIndexOfItem(it))
+            selectedMedia = it
+            saveLastPlaySongProperties()
+        }
+    }
+
     companion object {
         private const val ARGUMENT_SELECTED_CATEGORY = "ARGUMENT_SELECTED_CATEGORY"
         private const val ARGUMENT_SELECTED_ARTIST = "ARGUMENT_SELECTED_ARTIST"

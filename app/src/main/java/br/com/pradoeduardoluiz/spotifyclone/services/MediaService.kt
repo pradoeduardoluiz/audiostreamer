@@ -222,5 +222,13 @@ class MediaService : MediaBrowserServiceCompat() {
             Log.d(TAG, "[onPlaybackComplete]: SKIPPING TO NEXT")
             session.controller.transportControls.skipToNext()
         }
+
+        override fun updateUI(mediaId: String?) {
+            val intent = Intent().apply {
+                action = getString(R.string.broadcast_update_ui)
+                putExtra(getString(R.string.broadcast_new_media_id), mediaId)
+            }
+            sendBroadcast(intent)
+        }
     }
 }

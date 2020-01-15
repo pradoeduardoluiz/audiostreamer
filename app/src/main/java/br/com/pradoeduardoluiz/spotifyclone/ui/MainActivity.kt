@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     private var application: MyApplication? = null
     private lateinit var preferenceManager: MyPreferenceManager
     private var seekBarBroadcastReceiver: SeekBarBroadcastReceiver? = null
+    private var updateUIBroadcastReceiver: UpdateUIBroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,12 +65,16 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     override fun onResume() {
         super.onResume()
         initSeekBarBroadcastReceiver()
+        initUpdateUIBrBroadcastReceiver()
     }
 
     override fun onPause() {
         super.onPause()
 
         seekBarBroadcastReceiver?.let {
+            unregisterReceiver(it)
+        }
+        updateUIBroadcastReceiver?.let {
             unregisterReceiver(it)
         }
     }
@@ -233,12 +238,26 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
         return supportFragmentManager.findFragmentById(R.id.bottom_media_controller) as MediaControllerFragment
     }
 
+    private fun getPlayListFragment(): PlaylistFragment {
+        return supportFragmentManager.findFragmentByTag(getString(R.string.fragment_playlist)) as PlaylistFragment
+    }
+
     private fun initSeekBarBroadcastReceiver() {
 
         val intentFilter = IntentFilter().apply {
             addAction(getString(R.string.broadcast_seekbar_update))
         }
         seekBarBroadcastReceiver = SeekBarBroadcastReceiver().apply {
+            registerReceiver(this, intentFilter)
+        }
+    }
+
+    private fun initUpdateUIBrBroadcastReceiver() {
+
+        val intentFilter = IntentFilter().apply {
+            addAction(getString(R.string.broadcast_seekbar_update))
+        }
+        updateUIBroadcastReceiver = UpdateUIBroadcastReceiver().apply {
             registerReceiver(this, intentFilter)
         }
     }
@@ -257,10 +276,21 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
                     }
                 }
 
-//                getMediaControllerFragment().getMediaSeekBar().apply {
-//                    progress = seekProgress.toInt()
-//                    max = maxProgress.toInt()
-//                }
+            }
+        }
+    }
+
+    private inner class UpdateUIBroadcastReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+
+            intent?.let { intent ->
+
+                val mediaId = intent.getStringExtra(getString(R.string.broadcast_new_media_id))
+                Log.d(TAG, "[onReceive]: media id: $mediaId")
+
+                mediaId?.let {
+                    getPlayListFragment().updateUI(getMyApplication()?.getMediaItem(it))
+                }
             }
         }
     }

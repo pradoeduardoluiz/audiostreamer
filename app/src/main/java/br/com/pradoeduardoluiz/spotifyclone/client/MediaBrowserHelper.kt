@@ -137,7 +137,10 @@ class MediaBrowserHelper(
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-
+            Log.d(TAG, "[onMetadataChanged]: ")
+            metadata?.let {
+                mediaHelperControllerCallback?.onMetaDataChanged(it)
+            }
         }
     }
 
