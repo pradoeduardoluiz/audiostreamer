@@ -16,12 +16,14 @@ import br.com.pradoeduardoluiz.spotifyclone.players.MediaPlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.players.PlaybackInfoListener
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.util.Constants
+import br.com.pradoeduardoluiz.spotifyclone.util.MyPreferenceManager
 
 class MediaService : MediaBrowserServiceCompat() {
 
     private lateinit var session: MediaSessionCompat
     private lateinit var playback: PlayerAdapter
     private var application: MyApplication? = null
+    private lateinit var preferenceManager: MyPreferenceManager
 
     override fun onCreate() {
         super.onCreate()
@@ -34,6 +36,8 @@ class MediaService : MediaBrowserServiceCompat() {
         sessionToken = session.sessionToken
 
         application = MyApplication.getInstance()
+
+        preferenceManager = MyPreferenceManager(this)
 
         playback = MediaPlayerAdapter(this, MediaPlayerListener())
     }
@@ -111,6 +115,8 @@ class MediaService : MediaBrowserServiceCompat() {
             }
 
             playback.playFromMedia(preparedMedia)
+            preferenceManager.saveQueuePosition(queueIndex)
+            preferenceManager.saveLastPlayedMedia(preparedMedia?.description?.mediaId)
         }
 
         override fun onStop() {
@@ -133,6 +139,15 @@ class MediaService : MediaBrowserServiceCompat() {
                 isNewPlayList = it.getBoolean(Constants.QUEUE_NEW_PLAYLIST)
             }
 
+            mediaId?.let {
+                preparedMedia = application?.getMediaItem(it)
+                session.setMetadata(preparedMedia)
+                if (!session.isActive) {
+                    session.isActive = true
+                }
+                playback.playFromMedia(preparedMedia)
+            }
+
             if (isNewPlayList) {
                 resetPlaylist()
             }
@@ -143,14 +158,8 @@ class MediaService : MediaBrowserServiceCompat() {
                 queueIndex = newQueuePosition
             }
 
-            mediaId?.let {
-                preparedMedia = application?.getMediaItem(it)
-                session.setMetadata(preparedMedia)
-                if (!session.isActive) {
-                    session.isActive = true
-                }
-                playback.playFromMedia(preparedMedia)
-            }
+            preferenceManager.saveQueuePosition(queueIndex)
+            preferenceManager.saveLastPlayedMedia(preparedMedia?.description?.mediaId)
         }
 
         override fun onSeekTo(pos: Long) {

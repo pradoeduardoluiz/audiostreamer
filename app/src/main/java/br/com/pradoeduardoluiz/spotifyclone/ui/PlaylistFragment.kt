@@ -76,6 +76,16 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         }
     }
 
+    private fun getSelectedMediaItem(mediaId: String) {
+        mediaList.forEach { mediaItem ->
+            if (mediaItem.description.mediaId == mediaId) {
+                selectedMedia = mediaItem
+                adapter.setSelectedIndex(adapter.getIndexOfItem(mediaItem))
+            }
+        }
+    }
+
+
     private fun retrieveMedia() {
         mediaList.clear()
 
@@ -147,10 +157,16 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
         mediaList.add(media)
     }
 
-
     private fun updateDataSet() {
         mainActivityListener.hideProgressBar()
         adapter.setList(mediaList)
+        if (mainActivityListener.getMyPreferenceManager().getLastPlayedArtist() == selectedArtist?.artist_id) {
+            mainActivityListener.getMyPreferenceManager().getLastPlayedMedia()?.let {
+                getSelectedMediaItem(
+                    it
+                )
+            }
+        }
     }
 
     override fun onMediaSelected(position: Int) {
@@ -170,8 +186,14 @@ class PlaylistFragment : Fragment(), MediaSelectorListener {
     }
 
     private fun saveLastPlaySongProperties() {
-        selectedArtist?.artist_id?.let {
-            mainActivityListener.getMyPreferenceManager().setPlayListId(it)
+        selectedArtist?.artist_id?.let { artistId ->
+            mainActivityListener.getMyPreferenceManager().apply {
+                savePlaylistId(artistId)
+                saveLastPlayedArtist(artistId)
+                saveLastPlayedCategory(selectedCategory)
+                saveLastPlayedArtistImage(selectedArtist?.image)
+                saveLastPlayedMedia(selectedMedia?.description?.mediaId)
+            }
         }
     }
 

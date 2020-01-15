@@ -1,9 +1,6 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -23,6 +20,9 @@ import br.com.pradoeduardoluiz.spotifyclone.ui.interfaces.MainActivityListener
 import br.com.pradoeduardoluiz.spotifyclone.util.Constants
 import br.com.pradoeduardoluiz.spotifyclone.util.MainActivityFragmentManager
 import br.com.pradoeduardoluiz.spotifyclone.util.MyPreferenceManager
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QueryDocumentSnapshot
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelperCallback {
@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     private lateinit var preferenceManager: MyPreferenceManager
     private var seekBarBroadcastReceiver: SeekBarBroadcastReceiver? = null
     private var updateUIBroadcastReceiver: UpdateUIBroadcastReceiver? = null
+    private var onAppOpen: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,7 +82,51 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
 
     override fun onStart() {
         super.onStart()
+
+        if (preferenceManager.getPlayListId() != "") {
+            prepareLastPlayedMedia()
+        } else {
+            mediaBrowserHelper.onStart()
+        }
+    }
+
+    private fun prepareLastPlayedMedia() {
+        val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+
+        val mediaItems = mutableListOf<MediaMetadataCompat>()
+        preferenceManager.let { preferenceManager ->
+            val query = firestore
+                .collection(getString(R.string.collection_audio))
+                .document(getString(R.string.document_categories))
+                .collection(preferenceManager.getLastCategory() ?: "")
+                .document(preferenceManager.getLastPlayedArtist() ?: "")
+                .collection(getString(R.string.collection_content))
+                .orderBy(
+                    getString(R.string.field_date_added),
+                    Query.Direction.ASCENDING
+                )
+
+            query.get().addOnCompleteListener {
+                if (it.isSuccessful) {
+                    it.result?.forEach { document ->
+                        val mediaItem = addToMediaList(document)
+                        mediaItems.add(mediaItem)
+                        if (mediaItem.description.mediaId == preferenceManager.getLastPlayedMedia()) {
+                            getMediaControllerFragment().setMediaTitle(mediaItem)
+                        }
+                    }
+                } else {
+                    Log.d(ContentValues.TAG, "onComplete: error getting documents: " + it.exception)
+                }
+                onFinishGettingPreviousSessionData(mediaItems)
+            }
+        }
+    }
+
+    private fun onFinishGettingPreviousSessionData(mediaItems: MutableList<MediaMetadataCompat>) {
+        application?.setMediaItems(mediaItems)
         mediaBrowserHelper.onStart()
+        hideProgressBar()
     }
 
     override fun onStop() {
@@ -140,7 +185,8 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     }
 
     override fun onBackPressed() {
-        val fragments: MutableList<Fragment>? = MainActivityFragmentManager.getInstance()?.fragments
+        val fragments: MutableList<Fragment>? =
+            MainActivityFragmentManager.getInstance()?.fragments
 
         fragments?.let {
             if (it.size > 1) {
@@ -177,10 +223,23 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     }
 
     override fun playPause() {
-        if (isPlaying) {
-            mediaBrowserHelper.getTransportControls()?.pause()
+        if (onAppOpen) {
+            if (isPlaying) {
+                mediaBrowserHelper.getTransportControls()?.pause()
+            } else {
+                mediaBrowserHelper.getTransportControls()?.play()
+            }
         } else {
-            mediaBrowserHelper.getTransportControls()?.play()
+            if (preferenceManager.getPlayListId() != "") {
+                onMediaSelected(
+                    preferenceManager.getPlayListId(),
+                    application?.getMediaItem(
+                        preferenceManager.getLastPlayedMedia() ?: ""
+                    ), preferenceManager.getQueuePosition()
+                )
+            } else {
+                Toast.makeText(this, "selected something to play", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -210,6 +269,9 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
                 mediaBrowserHelper.getTransportControls()
                     ?.playFromMediaId(mediaItem.description.mediaId, bundle)
             }
+
+            onAppOpen = true
+
         } else {
             Toast.makeText(this, "Select something to play", Toast.LENGTH_SHORT).show()
         }
@@ -238,8 +300,8 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
         return supportFragmentManager.findFragmentById(R.id.bottom_media_controller) as MediaControllerFragment
     }
 
-    private fun getPlayListFragment(): PlaylistFragment {
-        return supportFragmentManager.findFragmentByTag(getString(R.string.fragment_playlist)) as PlaylistFragment
+    private fun getPlayListFragment(): PlaylistFragment? {
+        return supportFragmentManager.findFragmentByTag(getString(R.string.fragment_playlist)) as PlaylistFragment?
     }
 
     private fun initSeekBarBroadcastReceiver() {
@@ -255,7 +317,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     private fun initUpdateUIBrBroadcastReceiver() {
 
         val intentFilter = IntentFilter().apply {
-            addAction(getString(R.string.broadcast_seekbar_update))
+            addAction(getString(R.string.broadcast_update_ui))
         }
         updateUIBroadcastReceiver = UpdateUIBroadcastReceiver().apply {
             registerReceiver(this, intentFilter)
@@ -289,9 +351,47 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
                 Log.d(TAG, "[onReceive]: media id: $mediaId")
 
                 mediaId?.let {
-                    getPlayListFragment().updateUI(getMyApplication()?.getMediaItem(it))
+                    getPlayListFragment()?.updateUI(getMyApplication()?.getMediaItem(it))
                 }
             }
         }
     }
+
+    private fun addToMediaList(document: QueryDocumentSnapshot?): MediaMetadataCompat {
+
+        val media = MediaMetadataCompat.Builder()
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_MEDIA_ID,
+                document?.getString(getString(R.string.field_media_id))
+            )
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_ARTIST,
+                document?.getString(getString(R.string.field_artist))
+            )
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_TITLE,
+                document?.getString(getString(R.string.field_title))
+            )
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_MEDIA_URI,
+                document?.getString(getString(R.string.field_media_url))
+            )
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION,
+                document?.getString(getString(R.string.field_description))
+            )
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION,
+                document?.getDate(getString(R.string.field_date_added)).toString()
+            )
+            .putString(
+                MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI,
+                preferenceManager.getLastPlayedArtistImage()
+            )
+            .build()
+
+        return media
+    }
+
 }
+
