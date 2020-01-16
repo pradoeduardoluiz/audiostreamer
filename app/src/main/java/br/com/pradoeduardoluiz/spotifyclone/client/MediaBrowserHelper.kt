@@ -23,6 +23,7 @@ class MediaBrowserHelper(
     private var mediaBrowserSubscriptionCallback: MediaBrowserSubscriptionCallback
     private var mediaControllerCallback: MediaControllerCallback
     private var mediaHelperControllerCallback: MediaBrowserHelperCallback? = null
+    private var wasConfigurationChanged: Boolean = false
 
     init {
         mediaBrowserConnectionCallback = MediaBrowserConnectionCallback()
@@ -30,7 +31,8 @@ class MediaBrowserHelper(
         mediaControllerCallback = MediaControllerCallback()
     }
 
-    fun onStart() {
+    fun onStart(wasConfigurationChanged: Boolean) {
+        this.wasConfigurationChanged = wasConfigurationChanged
         if (mediaBrowser == null) {
             mediaBrowser = MediaBrowserCompat(
                 context,
@@ -97,9 +99,11 @@ class MediaBrowserHelper(
         ) {
             Log.d(TAG, "[onChildrenLoaded]: called $parentId , $children")
 
-            children.forEach { mediaItem ->
-                Log.d(TAG, "onChildrenLoaded: CALLED: queue item: " + mediaItem.mediaId)
-                mediaController?.addQueueItem(mediaItem.description)
+            if (!wasConfigurationChanged) {
+                children.forEach { mediaItem ->
+                    Log.d(TAG, "onChildrenLoaded: CALLED: queue item: " + mediaItem.mediaId)
+                    mediaController?.addQueueItem(mediaItem.description)
+                }
             }
         }
     }

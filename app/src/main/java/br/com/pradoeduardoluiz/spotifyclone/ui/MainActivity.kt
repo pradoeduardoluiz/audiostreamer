@@ -1,6 +1,7 @@
 package br.com.pradoeduardoluiz.spotifyclone.ui
 
 import android.content.*
+import android.content.res.Configuration
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -64,6 +65,11 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
         }
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        wasConfigurationChanged = true
+    }
+
     override fun onResume() {
         super.onResume()
         initSeekBarBroadcastReceiver()
@@ -87,7 +93,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
         if (preferenceManager.getPlayListId() != "") {
             prepareLastPlayedMedia()
         } else {
-            mediaBrowserHelper.onStart()
+            mediaBrowserHelper.onStart(wasConfigurationChanged)
         }
     }
 
@@ -126,7 +132,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
 
     private fun onFinishGettingPreviousSessionData(mediaItems: MutableList<MediaMetadataCompat>) {
         application?.setMediaItems(mediaItems)
-        mediaBrowserHelper.onStart()
+        mediaBrowserHelper.onStart(wasConfigurationChanged)
         hideProgressBar()
     }
 
