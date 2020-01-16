@@ -2,6 +2,8 @@ package br.com.pradoeduardoluiz.spotifyclone.services
 
 import android.app.Notification
 import android.content.Intent
+import android.graphics.Bitmap
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
@@ -10,6 +12,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.text.TextUtils
 import android.util.Log
+import androidx.annotation.Nullable
 import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
 import br.com.pradoeduardoluiz.spotifyclone.MyApplication
@@ -20,6 +23,13 @@ import br.com.pradoeduardoluiz.spotifyclone.players.PlaybackInfoListener
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.util.Constants
 import br.com.pradoeduardoluiz.spotifyclone.util.MyPreferenceManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.FutureTarget
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import java.util.concurrent.ExecutionException
 
 
 class MediaService : MediaBrowserServiceCompat() {
@@ -221,10 +231,10 @@ class MediaService : MediaBrowserServiceCompat() {
 
     private inner class MediaPlayerListener : PlaybackInfoListener {
 
-        private val serviceManager: ServiceMananger
+        private val serviceManager: ServiceManager
 
         init {
-            serviceManager = ServiceMananger()
+            serviceManager = ServiceManager()
         }
 
         override fun onPlaybackStateChange(state: PlaybackStateCompat) {
@@ -232,8 +242,16 @@ class MediaService : MediaBrowserServiceCompat() {
             session.setPlaybackState(state)
 
             when (state.state) {
-                PlaybackStateCompat.STATE_PLAYING -> serviceManager.displayNotification(state)
-                PlaybackStateCompat.STATE_PAUSED -> serviceManager.displayNotification(state)
+                PlaybackStateCompat.STATE_PLAYING -> serviceManager.updateNotification(
+                    state,
+                    playback.getCurrentMedia()?.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI)
+                        ?: ""
+                )
+                PlaybackStateCompat.STATE_PAUSED -> serviceManager.updateNotification(
+                    state,
+                    playback.getCurrentMedia()?.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI)
+                        ?: ""
+                )
                 PlaybackStateCompat.STATE_STOPPED -> serviceManager.moveServiceOutOfStartedState()
             }
         }
@@ -261,9 +279,52 @@ class MediaService : MediaBrowserServiceCompat() {
             sendBroadcast(intent)
         }
 
-        inner class ServiceMananger {
+        inner class ServiceManager : ICallback {
 
-            fun displayNotification(state: PlaybackStateCompat) {
+            private var displayImageUri: String? = null
+            private lateinit var currentArtistBitmap: Bitmap
+            private lateinit var state: PlaybackStateCompat
+            private lateinit var asyncTask: GetArtistBitmapAsyncTask
+
+            fun updateNotification(state: PlaybackStateCompat, displayImageUri: String) {
+                this.state = state
+
+                if (displayImageUri != this.displayImageUri) {
+
+                    asyncTask = GetArtistBitmapAsyncTask(
+                        Glide.with(this@MediaService)
+                            .asBitmap()
+                            .load(playback.getCurrentMedia()?.description?.iconUri)
+                            .listener(object : RequestListener<Bitmap?> {
+                                override fun onLoadFailed(
+                                    @Nullable e: GlideException?, model: Any?,
+                                    target: Target<Bitmap?>?,
+                                    isFirstResource: Boolean
+                                ): Boolean {
+                                    return false
+                                }
+
+                                override fun onResourceReady(
+                                    resource: Bitmap?,
+                                    model: Any?,
+                                    target: Target<Bitmap?>?,
+                                    dataSource: DataSource?,
+                                    isFirstResource: Boolean
+                                ): Boolean {
+                                    return true
+                                }
+                            }).submit(),
+                        this
+                    )
+                    asyncTask.execute()
+                    this.displayImageUri = displayImageUri
+
+                } else {
+                    displayNotification(currentArtistBitmap)
+                }
+            }
+
+            fun displayNotification(bitmap: Bitmap) {
                 var notification: Notification? = null
 
                 when (state.state) {
@@ -272,7 +333,7 @@ class MediaService : MediaBrowserServiceCompat() {
                             state,
                             sessionToken,
                             playback.getCurrentMedia()?.description,
-                            null
+                            bitmap
                         )
                         if (!isServiceRunning) {
                             ContextCompat.startForegroundService(
@@ -289,7 +350,7 @@ class MediaService : MediaBrowserServiceCompat() {
                             state,
                             sessionToken,
                             playback.getCurrentMedia()?.description,
-                            null
+                            bitmap
                         )
                         mediaNotificationManager.getNotificationManager()
                             .notify(MediaNotificationManager.NOTIFICATION_ID, notification)
@@ -302,6 +363,43 @@ class MediaService : MediaBrowserServiceCompat() {
                 stopForeground(true)
                 stopSelf()
             }
+
+            override fun done(bitmap: Bitmap) {
+                currentArtistBitmap = bitmap
+            }
         }
+
+        internal inner class GetArtistBitmapAsyncTask(
+            private var bitmap: FutureTarget<Bitmap>,
+            iCallback: ICallback
+        ) :
+            AsyncTask<Void?, Void?, Bitmap?>() {
+            private var iCallback: ICallback = iCallback
+
+            fun GetArtistBitmapAsyncTask(
+                bm: FutureTarget<Bitmap>,
+                iCallback: ICallback
+            ) {
+                this.bitmap = bm
+                this.iCallback = iCallback
+            }
+
+            override fun onPostExecute(bitmap: Bitmap?) {
+                super.onPostExecute(bitmap)
+                iCallback.done(bitmap)
+            }
+
+            override fun doInBackground(vararg params: Void?): Bitmap? {
+                try {
+                    return bitmap.get()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                }
+                return null
+            }
+        }
+
     }
 }
