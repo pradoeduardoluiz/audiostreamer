@@ -87,9 +87,9 @@ class MediaNotificationManager constructor(private val mediaService: MediaServic
 
     fun buildNotification(
         state: PlaybackStateCompat,
-        token: MediaSessionCompat.Token,
-        description: MediaDescriptionCompat,
-        bitmap: Bitmap
+        token: MediaSessionCompat.Token?,
+        description: MediaDescriptionCompat?,
+        bitmap: Bitmap?
     ): Notification {
 
         var isPlaying: Boolean = state.state == PlaybackStateCompat.STATE_PLAYING
@@ -107,8 +107,8 @@ class MediaNotificationManager constructor(private val mediaService: MediaServic
             .setColor(ContextCompat.getColor(mediaService, R.color.notification_bg))
             .setSmallIcon(R.drawable.ic_audiotrack_grey_24dp) // Pending intent that is fired when user clicks on notification.
             .setContentIntent(createContentIntent()) // Title - Usually Song name.
-            .setContentTitle(description.title) // Subtitle - Usually Artist name.
-            .setContentText(description.subtitle)
+            .setContentTitle(description?.title) // Subtitle - Usually Artist name.
+            .setContentText(description?.subtitle)
             .setLargeIcon(bitmap) // When notification is deleted (when playback is paused and notification can be
 // deleted) fire MediaButtonPendingIntent with ACTION_STOP.
             .setDeleteIntent(
@@ -143,6 +143,7 @@ class MediaNotificationManager constructor(private val mediaService: MediaServic
     }
 
     companion object {
+        const val NOTIFICATION_ID = 201
         private const val TAG = "MediaNotificationManage"
 
         private const val CHANNEL_ID = "br.com.pradoeduardoluiz.spotifyclone.musicplayer.channel"
