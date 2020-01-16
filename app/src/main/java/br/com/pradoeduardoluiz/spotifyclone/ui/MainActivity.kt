@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity(), MainActivityListener, MediaBrowserHelp
     private var seekBarBroadcastReceiver: SeekBarBroadcastReceiver? = null
     private var updateUIBroadcastReceiver: UpdateUIBroadcastReceiver? = null
     private var onAppOpen: Boolean = false
+    private var wasConfigurationChanged: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,6 +1,5 @@
 package br.com.pradoeduardoluiz.spotifyclone.services
 
-import android.R.attr.bitmap
 import android.app.Notification
 import android.content.Intent
 import android.os.Bundle
@@ -13,7 +12,6 @@ import android.text.TextUtils
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.media.MediaBrowserServiceCompat
-import androidx.test.orchestrator.junit.BundleJUnitUtils.getDescription
 import br.com.pradoeduardoluiz.spotifyclone.MyApplication
 import br.com.pradoeduardoluiz.spotifyclone.R
 import br.com.pradoeduardoluiz.spotifyclone.notifications.MediaNotificationManager
@@ -22,7 +20,6 @@ import br.com.pradoeduardoluiz.spotifyclone.players.PlaybackInfoListener
 import br.com.pradoeduardoluiz.spotifyclone.players.PlayerAdapter
 import br.com.pradoeduardoluiz.spotifyclone.util.Constants
 import br.com.pradoeduardoluiz.spotifyclone.util.MyPreferenceManager
-import sun.jvm.hotspot.utilities.IntArray
 
 
 class MediaService : MediaBrowserServiceCompat() {
@@ -224,9 +221,21 @@ class MediaService : MediaBrowserServiceCompat() {
 
     private inner class MediaPlayerListener : PlaybackInfoListener {
 
+        private val serviceManager: ServiceMananger
+
+        init {
+            serviceManager = ServiceMananger()
+        }
+
         override fun onPlaybackStateChange(state: PlaybackStateCompat) {
             // Report the state to the MediaSession
             session.setPlaybackState(state)
+
+            when (state.state) {
+                PlaybackStateCompat.STATE_PLAYING -> serviceManager.displayNotification(state)
+                PlaybackStateCompat.STATE_PAUSED -> serviceManager.displayNotification(state)
+                PlaybackStateCompat.STATE_STOPPED -> serviceManager.moveServiceOutOfStartedState()
+            }
         }
 
         override fun seekTo(progress: Long, max: Long) {
@@ -279,7 +288,7 @@ class MediaService : MediaBrowserServiceCompat() {
                         notification = mediaNotificationManager.buildNotification(
                             state,
                             sessionToken,
-                            playback.getCurrentMedia().getDescription(),
+                            playback.getCurrentMedia()?.description,
                             null
                         )
                         mediaNotificationManager.getNotificationManager()
@@ -289,7 +298,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
             }
 
-            private fun moveServiceOutOfStartedState() {
+            fun moveServiceOutOfStartedState() {
                 stopForeground(true)
                 stopSelf()
             }

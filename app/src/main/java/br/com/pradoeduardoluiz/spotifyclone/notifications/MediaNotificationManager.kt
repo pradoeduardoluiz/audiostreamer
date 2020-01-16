@@ -59,7 +59,7 @@ class MediaNotificationManager constructor(private val mediaService: MediaServic
         notificationManager.cancelAll()
     }
 
-    public fun getNotificationManager() = notificationManager
+    fun getNotificationManager() = notificationManager
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannel() {
